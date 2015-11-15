@@ -50,13 +50,12 @@ class BankFio():
             return None
         
         ct = response.getheader('Content-Type')
-        if not ct:
-            raise UserError("Server returned unspecified content type")
-        if not "application/json" in ct:
-            raise UserError("Bank Server returned content type of " + ct + ", application/json expected")
-        
-        m = re.match(r".*;charset\s*=\s*([a-zA-Z0-9_-]+).*", ct)
-        encoding = m.group(1) if m else 'utf-8'
+        if not ct or not "application/json" in ct:
+            self.__logger.warn("Server returned unspecified content type, assuming JSON and UTF-8 encoding")
+            encoding = 'utf-8'
+        else:        
+            m = re.match(r".*;charset\s*=\s*([a-zA-Z0-9_-]+).*", ct)
+            encoding = m.group(1) if m else 'utf-8'
         data = response.read().decode(encoding)
         conn.close()
         
