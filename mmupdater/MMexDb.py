@@ -41,17 +41,34 @@ class MMexDb:
             self.__save_transaction(trans)
             
     def __save_transaction(self, trans):
+        if 'TRANSACTIONNUMBER' in trans and self.__transaction_exists(trans['TRANSACTIONNUMBER']):
+            print('Transaction ' + trans['TRANSACTIONNUMBER'] + ' exists already, skipping')
+            print()
+            return
         keys = ', '.join(trans.keys())
         questionmarks = ','.join('?' * len(trans.keys()))
         query = 'insert into checkingaccount_v1 (' + keys + ') values (' + questionmarks + ')'
-        print(query)
-        print(list(trans.values())) 
-        for v in trans.values():
-            print(v, ":", type(v))
+        print('Amount ' + ('-' if trans['TRANSCODE'] == 'Withdrawal' else '') + str(trans['TOTRANSAMOUNT']))
+        if 'NOTES' in trans:
+            print(self.__longest_desc(trans['NOTES']))
+        print() 
         c = self.__conn.cursor()
         c.execute(query, list(trans.values()))
         self.__conn.commit()
-                
+    
+    def __longest_desc(self, notesField):
+        stringlist = notesField.split(';') 
+        maxLen = max(map(len, stringlist))   
+        return [s for s in stringlist if len(s) == maxLen][0].strip("\n\r\t ") 
+        
+    def __transaction_exists(self, transactionNumber):
+        transid = None
+        c = self.__conn.cursor()
+        result = c.execute('select TRANSID, "dummy" from Checkingaccount_v1 WHERE TRANSACTIONNUMBER = ?', (transactionNumber,))
+        for tid,_ in result:
+            transid = tid
+        return not transid == None
+        
     def __read_accounts(self):
         c = self.__conn.cursor()
         result = c.execute('select  ACCOUNTID,  ACCOUNTNUM from accountlist_v1 WHERE STATUS = "Open"')
