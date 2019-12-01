@@ -27,7 +27,7 @@ class BankFio():
         self.mmexdb = db
     
     def __get_http_connection(self, url):
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv2 | ssl.PROTOCOL_SSLv3 | ssl.PROTOCOL_TLSv1)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         context.verify_mode = ssl.CERT_NONE
         #context.load_verify_locations(cafile=self.settings.certificate_file
         
@@ -75,7 +75,7 @@ class BankFio():
         '''
         self.__revert_if_needed()
         
-        jsonObj = json.loads(self.__read_url(self.settings.transactions_url), 'UTF-8')
+        jsonObj = json.loads(self.__read_url(self.settings.transactions_url))
         self.__logger.debug(jsonObj)
                 
         return self.__convert_transactions(jsonObj)

@@ -4,6 +4,7 @@ Created on Sep 24, 2013
 @author: novpa01
 '''
 from mmupdater.UserError import UserError
+import logging
 
 class CategoryAssigner():
     '''
@@ -11,6 +12,8 @@ class CategoryAssigner():
     '''
     categories = None
 
+    __logger = logging.getLogger('MMexDB')
+    
     def __init__(self, settings, db):
         '''
         Constructor
@@ -24,10 +27,13 @@ class CategoryAssigner():
 
     
     def assign(self, transactions):
+        matches = 0
         for trans in transactions:
             match = self.__find_match(trans)
             if match:
                 self.__apply_match(trans, match)
+                matches += 1
+        self.__logger.debug("Matches found: " + str(matches))
             
     def __find_match(self, trans):
         for cat in self.categories:
@@ -48,4 +54,9 @@ class CategoryAssigner():
             trans['SUBCATEGID'] = match['subcategory_id']
         if 'status' in match:
             trans['STATUS'] = match['status']
-    
+            
+    def get_name(self, category_id, subcategory_id):
+        for cat in self.categories:
+            if cat['category_id'] == category_id and (not(subcategory_id) or cat['subcategory_id'] == subcategory_id):
+                return cat['category'] + ":" + cat['subcategory']
+        return ""    
